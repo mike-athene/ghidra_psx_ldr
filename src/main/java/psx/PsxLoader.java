@@ -100,7 +100,7 @@ public class PsxLoader extends AbstractLibrarySupportLoader {
 	public static final String PSX_RAM_BASE_OPTION = "RAM Base Address";
 
 	private static final long DEF_RAM_BASE = 0x80000000L;
-	public static final long RAM_SIZE = 0x200000L;
+	public static final long RAM_SIZE = 0x800000L;
 	private static final long __heapbase_off = -0x30;
 	private static final long _sbss_off = -0x28;
 	private static final long _sdata_off = -0x20;
