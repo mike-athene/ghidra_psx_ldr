@@ -22,6 +22,7 @@ import ghidra.program.model.lang.Language;
 import ghidra.program.model.lang.LanguageID;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
+import psyq.LibgpuMacroDetector;
 import psyq.SigApplier;
 
 
@@ -81,7 +82,7 @@ public class PsxAnalyzer extends AbstractAnalyzer {
 	public boolean added(Program program, AddressSetView set, TaskMonitor monitor, MessageLog log) {
 		try {
 			if (!program.getLanguageID().getIdAsString().equals(PsxLoader.PSX_LANG_ID)) {
-				SleighLanguageProvider lngProv = new SleighLanguageProvider();
+				SleighLanguageProvider lngProv = SleighLanguageProvider.getSleighLanguageProvider();
 				LanguageID langId = new LanguageID(PsxLoader.PSX_LANG_ID);
 				Language lng = lngProv.getLanguage(langId);
 				CompilerSpecID specId = new CompilerSpecID(PsxLoader.PSX_LANG_SPEC_ID);
@@ -113,17 +114,20 @@ public class PsxAnalyzer extends AbstractAnalyzer {
 			
 			while (i.hasNext()) {
 				AddressRange next = i.next();
-			
-				applyPsyqSignaturesByVersion(files, patchesFilePath, program, next.getMinAddress(), next.getMaxAddress(), monitor, log);
+				Address startAddr = next.getMinAddress();
+				Address endAddr = next.getMaxAddress();
+				
+				applyPsyqSignaturesByVersion(files, patchesFilePath, program, startAddr, endAddr, monitor, log);
+				LibgpuMacroDetector.detectLibgpuMacros(program, startAddr, endAddr, monitor);
 			}
 			
 			monitor.setMessage("Applying PsyQ functions and data types...");
-			monitor.clearCanceled();
+			monitor.clearCancelled();
 			DataTypeManager mgr = PsxLoader.loadPsyqGdt(program, set, log, true);
 			monitor.setMessage("Applying PsyQ functions and data types done.");
 			
 			monitor.setMessage("Creating GTE macro call functions...");
-			monitor.clearCanceled();
+			monitor.clearCancelled();
 			PsxLoader.addGteMacroSpace(program, mgr, log);
 			monitor.setMessage("Creating GTE macro call functions done.");
 		} catch (Exception e) {
